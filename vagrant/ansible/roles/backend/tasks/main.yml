@@ -1,0 +1,53 @@
+---
+# Role: backend
+# Deploy Flask + Gunicorn + Nginx di vm-backend
+
+- name: Salin seluruh folder backend ke VM
+  ansible.builtin.copy:
+    src: "{{ project_dir }}/../backend/"
+    dest: "{{ project_dir }}/"
+    owner: vagrant
+    group: vagrant
+    mode: "0644"
+  remote_src: true
+
+- name: Render file .env backend dari template
+  ansible.builtin.template:
+    src: env.j2
+    dest: "{{ project_dir }}/.env"
+    owner: vagrant
+    group: vagrant
+    mode: "0600"
+
+- name: Render konfigurasi Nginx dari template
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: "{{ project_dir }}/nginx/default.conf"
+    owner: vagrant
+    group: vagrant
+    mode: "0644"
+
+- name: Build dan jalankan Flask + Nginx container
+  ansible.builtin.shell: |
+    docker compose up -d --build
+  args:
+    chdir: "{{ project_dir }}"
+  become: true
+  become_user: vagrant
+
+- name: Tunggu Flask API siap (cek endpoint blacklist)
+  ansible.builtin.uri:
+    url: "http://{{ ip_backend }}/api/blacklist/"
+    method: GET
+    status_code: 200
+  register: api_check
+  retries: 12
+  delay: 10
+  until: api_check.status == 200
+
+- name: Inisialisasi database (buat tabel + seed blacklist)
+  ansible.builtin.shell: |
+    docker exec nopmo_flask python init_db.py
+  become: true
+  become_user: vagrant
+  changed_when: true

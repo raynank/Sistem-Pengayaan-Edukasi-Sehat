@@ -1,0 +1,38 @@
+---
+# Role: frontend
+# Deploy Next.js di vm-frontend
+
+- name: Salin seluruh folder frontend ke VM
+  ansible.builtin.copy:
+    src: "{{ project_dir }}/../frontend/"
+    dest: "{{ project_dir }}/"
+    owner: vagrant
+    group: vagrant
+    mode: "0644"
+  remote_src: true
+
+- name: Render docker-compose frontend dari template
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ project_dir }}/docker-compose.yml"
+    owner: vagrant
+    group: vagrant
+    mode: "0644"
+
+- name: Build dan jalankan container Next.js
+  ansible.builtin.shell: |
+    docker compose up -d --build
+  args:
+    chdir: "{{ project_dir }}"
+  become: true
+  become_user: vagrant
+
+- name: Tunggu frontend siap (cek port 3000)
+  ansible.builtin.uri:
+    url: "http://{{ ip_frontend }}:{{ frontend_port }}"
+    method: GET
+    status_code: 200
+  register: fe_check
+  retries: 24
+  delay: 10
+  until: fe_check.status == 200

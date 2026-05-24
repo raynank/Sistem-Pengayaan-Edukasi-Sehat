@@ -1,0 +1,26 @@
+# ─────────────────────────────────────────────────────────────
+# Variabel terpusat untuk seluruh deployment NoPMO Tracker
+# Ganti nilai-nilai di bawah sebelum menjalankan vagrant up
+# ─────────────────────────────────────────────────────────────
+
+# IP masing-masing VM (Vagrant private_network / host-only)
+ip_database: "192.168.56.10"
+ip_backend:  "192.168.56.11"
+ip_frontend: "192.168.56.12"
+
+# ─── Database ────────────────────────────────────────────────
+db_user:     "nopmo_user"
+db_password: "NoPmoDbPass123!"   # ganti dengan password kuat
+db_name:     "nopmo_db"
+db_port:     5432
+
+# ─── Backend ─────────────────────────────────────────────────
+# Generate dengan: python3 -c "import secrets; print(secrets.token_hex(32))"
+flask_secret_key: "changeme-generate-random-64char-secret-key-before-deploy"
+
+# Path project di dalam VM (hasil sync dari host)
+project_dir: "/home/vagrant/nopmo"
+
+# ─── Port ────────────────────────────────────────────────────
+nginx_port:    80
+frontend_port: 3000
