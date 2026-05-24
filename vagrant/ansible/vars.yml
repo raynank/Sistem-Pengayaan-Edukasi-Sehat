@@ -18,8 +18,10 @@ db_port:     5432
 # Generate dengan: python3 -c "import secrets; print(secrets.token_hex(32))"
 flask_secret_key: "changeme-generate-random-64char-secret-key-before-deploy"
 
-# Path project di dalam VM (hasil sync dari host)
-project_dir: "/home/vagrant/nopmo"
+# Path project di dalam VM (Vagrant auto-mount ke /vagrant)
+project_dir_database: "/vagrant/database"
+project_dir_backend:  "/vagrant/backend"
+project_dir_frontend: "/vagrant/frontend"
 
 # ─── Port ────────────────────────────────────────────────────
 nginx_port:    80
