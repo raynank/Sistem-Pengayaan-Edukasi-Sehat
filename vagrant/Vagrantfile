@@ -6,6 +6,12 @@ Vagrant.configure("2") do |config|
   # Matikan auto update box agar startup lebih cepat
   config.vm.box_check_update = false
 
+  # Mount root project ke /project di tiap VM
+  # type: "rsync" dipakai agar tidak butuh VirtualBox Guest Additions
+  # (menghindari error mismatch versi Guest Additions vs VirtualBox host)
+  config.vm.synced_folder "..", "/project", type: "rsync",
+    rsync__exclude: [".git/", "*/node_modules/", "*/.next/", "*/venv/", "*/__pycache__/"]
+
   # ─────────────────────────────────────────
   # VM 1 — vm-database (PostgreSQL)
   # ─────────────────────────────────────────
