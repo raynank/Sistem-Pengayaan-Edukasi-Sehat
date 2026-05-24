@@ -18,10 +18,12 @@ db_port:     5432
 # Generate dengan: python3 -c "import secrets; print(secrets.token_hex(32))"
 flask_secret_key: "changeme-generate-random-64char-secret-key-before-deploy"
 
-# Path project di dalam VM (Vagrant auto-mount ke /vagrant)
-project_dir_database: "/vagrant/database"
-project_dir_backend:  "/vagrant/backend"
-project_dir_frontend: "/vagrant/frontend"
+# Path project di dalam VM
+# /vagrant  = folder vagrant/  (Vagrantfile + ansible/)
+# /project  = root project     (backend/, database/, frontend/, extension/)
+project_dir_database: "/project/database"
+project_dir_backend:  "/project/backend"
+project_dir_frontend: "/project/frontend"
 
 # ─── Port ────────────────────────────────────────────────────
 nginx_port:    80
