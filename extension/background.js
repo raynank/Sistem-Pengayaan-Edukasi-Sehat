@@ -1,5 +1,7 @@
-const API_URL = "http://localhost:5000/api/blacklist/";
-const REDIRECT_URL = "http://localhost:3000/hold-on"; // Mengarahkan ke halaman peringatan intervensi
+// Local: gunakan IP VM langsung
+// Production: ganti dengan https://api.yourdomain.com dan https://yourdomain.com
+const API_URL = "http://192.168.1.11/api/blacklist/";
+const REDIRECT_URL = "http://192.168.1.12:3000/hold-on";
 
 async function fetchAndSyncRules() {
   try {
