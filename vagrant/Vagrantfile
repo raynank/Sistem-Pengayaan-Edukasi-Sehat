@@ -6,9 +6,12 @@ Vagrant.configure("2") do |config|
   # Matikan auto update box agar startup lebih cepat
   config.vm.box_check_update = false
 
-  # Mount root project ke /project di tiap VM
-  # type: "rsync" dipakai agar tidak butuh VirtualBox Guest Additions
-  # (menghindari error mismatch versi Guest Additions vs VirtualBox host)
+  # Override default /vagrant mount ke rsync agar tidak butuh Guest Additions
+  # (fix mismatch Guest Additions 6.0.0 vs VirtualBox 7.2)
+  config.vm.synced_folder ".", "/vagrant", type: "rsync",
+    rsync__exclude: [".git/"]
+
+  # Mount root project ke /project di tiap VM (rsync, tanpa Guest Additions)
   config.vm.synced_folder "..", "/project", type: "rsync",
     rsync__exclude: [".git/", "*/node_modules/", "*/.next/", "*/venv/", "*/__pycache__/"]
 
