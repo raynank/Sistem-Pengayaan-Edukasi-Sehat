@@ -172,7 +172,59 @@ Tabel `blacklist_domains` (terseed otomatis):
 
 ---
 
-## 5. Alur Deployment
+## 5. Deployment Lokal dengan Vagrant + Ansible
+
+Untuk simulasi arsitektur 3-VM di laptop tanpa setup manual, tersedia konfigurasi Vagrant + Ansible di direktori `vagrant/`.
+
+### Struktur
+
+```
+vagrant/
+├── Vagrantfile                        ← definisi 3 VM + trigger Ansible
+└── ansible/
+    ├── playbook.yml                   ← master playbook (urutan deploy)
+    ├── inventory.ini                  ← daftar VM + IP
+    ├── vars.yml                       ← semua variabel terpusat (edit di sini)
+    └── roles/
+        ├── common/tasks/main.yml      ← install Docker di semua VM
+        ├── database/                  ← deploy PostgreSQL
+        ├── backend/                   ← deploy Flask + Nginx
+        └── frontend/                  ← deploy Next.js
+```
+
+### IP Vagrant (Private Network / Host-only VirtualBox)
+
+| VM | IP |
+|---|---|
+| `vm-database` | `192.168.56.10` |
+| `vm-backend` | `192.168.56.11` |
+| `vm-frontend` | `192.168.56.12` |
+
+> Berbeda dari IP `192.168.1.x` di config Docker yang untuk real VM. Vagrant pakai host-only network VirtualBox (`192.168.56.x`).
+
+### Cara Kerja Provisioning Otomatis
+
+1. `vagrant up` → Vagrant buat 3 VM dari box `ubuntu/jammy64`
+2. Vagrant mount seluruh project ke `/vagrant` di tiap VM (synced folder)
+3. Vagrant trigger `ansible_local` di tiap VM dengan limit role masing-masing
+4. Ansible jalankan `playbook.yml` berurutan: `common` → `database` → `backend` → `frontend`
+5. Tiap play: salin folder, render `.env` + nginx config dari `vars.yml`, jalankan `docker compose up --build`
+
+### Perintah Vagrant
+
+```bash
+cd vagrant/
+vagrant up                     # buat + provision semua VM (~15 menit pertama kali)
+vagrant status                 # cek status VM
+vagrant ssh vm-backend         # SSH masuk ke VM
+vagrant provision vm-backend   # re-provision satu VM
+vagrant halt                   # matikan VM (data tersimpan)
+vagrant destroy -f             # hapus semua VM
+```
+
+---
+
+## 6. Alur Deployment (Real VM / Production)
 
 ```
 Langkah 1: vm-database
@@ -201,7 +253,7 @@ Langkah 4: Extension
 
 ---
 
-## 6. Ringkasan Perubahan File
+## 7. Ringkasan Perubahan File
 
 | File | Aksi | Keterangan |
 |---|---|---|
@@ -219,10 +271,18 @@ Langkah 4: Extension
 | `extension/background.js` | Diedit | URL hardcode → domain production |
 | `README.md` | Diedit | Dokumentasi deployment baru |
 | `PRD.md` | Dibuat | Dokumen ini |
+| `vagrant/Vagrantfile` | Dibuat | 3 VM + trigger Ansible otomatis |
+| `vagrant/ansible/playbook.yml` | Dibuat | Master playbook urutan deploy |
+| `vagrant/ansible/inventory.ini` | Dibuat | Daftar VM + IP |
+| `vagrant/ansible/vars.yml` | Dibuat | Semua variabel terpusat |
+| `vagrant/ansible/roles/common/` | Dibuat | Install Docker di semua VM |
+| `vagrant/ansible/roles/database/` | Dibuat | Deploy PostgreSQL |
+| `vagrant/ansible/roles/backend/` | Dibuat | Deploy Flask + Nginx |
+| `vagrant/ansible/roles/frontend/` | Dibuat | Deploy Next.js |
 
 ---
 
-## 7. Catatan Keamanan
+## 8. Catatan Keamanan
 
 | Aspek | Implementasi |
 |---|---|

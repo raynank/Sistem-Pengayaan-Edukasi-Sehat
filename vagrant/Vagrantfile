@@ -1,0 +1,75 @@
+Vagrant.configure("2") do |config|
+
+  # Base box: Ubuntu 22.04 LTS
+  config.vm.box = "ubuntu/jammy64"
+
+  # Matikan auto update box agar startup lebih cepat
+  config.vm.box_check_update = false
+
+  # ─────────────────────────────────────────
+  # VM 1 — vm-database (PostgreSQL)
+  # ─────────────────────────────────────────
+  config.vm.define "vm-database" do |db|
+    db.vm.hostname = "vm-database"
+    db.vm.network "private_network", ip: "192.168.56.10"
+
+    db.vm.provider "virtualbox" do |vb|
+      vb.name   = "nopmo-vm-database"
+      vb.memory = 512
+      vb.cpus   = 1
+    end
+
+    db.vm.provision "ansible_local" do |ansible|
+      ansible.install        = true
+      ansible.playbook       = "ansible/playbook.yml"
+      ansible.inventory_path = "ansible/inventory.ini"
+      ansible.limit          = "vm-database"
+      ansible.extra_vars     = { ansible_python_interpreter: "/usr/bin/python3" }
+    end
+  end
+
+  # ─────────────────────────────────────────
+  # VM 2 — vm-backend (Flask + Gunicorn + Nginx)
+  # ─────────────────────────────────────────
+  config.vm.define "vm-backend" do |be|
+    be.vm.hostname = "vm-backend"
+    be.vm.network "private_network", ip: "192.168.56.11"
+
+    be.vm.provider "virtualbox" do |vb|
+      vb.name   = "nopmo-vm-backend"
+      vb.memory = 1024
+      vb.cpus   = 1
+    end
+
+    be.vm.provision "ansible_local" do |ansible|
+      ansible.install        = true
+      ansible.playbook       = "ansible/playbook.yml"
+      ansible.inventory_path = "ansible/inventory.ini"
+      ansible.limit          = "vm-backend"
+      ansible.extra_vars     = { ansible_python_interpreter: "/usr/bin/python3" }
+    end
+  end
+
+  # ─────────────────────────────────────────
+  # VM 3 — vm-frontend (Next.js)
+  # ─────────────────────────────────────────
+  config.vm.define "vm-frontend" do |fe|
+    fe.vm.hostname = "vm-frontend"
+    fe.vm.network "private_network", ip: "192.168.56.12"
+
+    fe.vm.provider "virtualbox" do |vb|
+      vb.name   = "nopmo-vm-frontend"
+      vb.memory = 1024
+      vb.cpus   = 1
+    end
+
+    fe.vm.provision "ansible_local" do |ansible|
+      ansible.install        = true
+      ansible.playbook       = "ansible/playbook.yml"
+      ansible.inventory_path = "ansible/inventory.ini"
+      ansible.limit          = "vm-frontend"
+      ansible.extra_vars     = { ansible_python_interpreter: "/usr/bin/python3" }
+    end
+  end
+
+end

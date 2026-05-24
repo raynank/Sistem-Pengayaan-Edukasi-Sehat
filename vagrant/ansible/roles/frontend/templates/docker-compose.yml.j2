@@ -1,0 +1,13 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://{{ ip_backend }}/api
+    container_name: nopmo_frontend
+    restart: unless-stopped
+    ports:
+      - "{{ frontend_port }}:3000"
+    environment:
+      - NODE_ENV=production
