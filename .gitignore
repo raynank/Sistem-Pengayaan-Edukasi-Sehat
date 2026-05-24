@@ -21,6 +21,9 @@ venv/
 env/
 .env
 instance/
+
+# Docker — environment files (semua .env di semua subdirektori)
+**/.env
 *.sqlite3
 *.db
 .pytest_cache/

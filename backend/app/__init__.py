@@ -13,8 +13,11 @@ def create_app(config_class=Config):
 
     db.init_app(app)
     bcrypt.init_app(app)
-    # Configure CORS properly for production to only allow VM-FE domain
-    CORS(app) 
+    # Hanya izinkan request dari vm-frontend
+    # Untuk production, ganti dengan domain aktual: https://yourdomain.com
+    CORS(app, origins=[
+        "http://192.168.1.12:3000",
+    ])
 
     with app.app_context():
         # Import models so SQLAlchemy knows about them
