@@ -1,0 +1,14 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # URL backend (Nginx vm-backend) — ganti yourdomain.com dengan domain aktual
+        NEXT_PUBLIC_API_URL: https://api.yourdomain.com/api
+    container_name: nopmo_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
