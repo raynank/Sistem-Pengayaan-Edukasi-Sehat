@@ -1,0 +1,40 @@
+services:
+  flask:
+    build: .
+    container_name: nopmo_flask
+    restart: unless-stopped
+    env_file: .env
+    expose:
+      # Hanya expose ke Docker internal network, tidak ke host
+      - "5000"
+    networks:
+      - backend_net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/api/blacklist/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  nginx:
+    image: nginx:alpine
+    container_name: nopmo_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      # Direktori Let's Encrypt dari host (di-mount setelah certbot dijalankan)
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      # Webroot untuk ACME challenge saat renewal otomatis
+      - /var/www/certbot:/var/www/certbot:ro
+    depends_on:
+      flask:
+        condition: service_healthy
+    networks:
+      - backend_net
+
+networks:
+  backend_net:
+    driver: bridge
