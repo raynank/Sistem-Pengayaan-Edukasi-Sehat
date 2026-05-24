@@ -1,20 +1,12 @@
 ---
 # Role: backend
 # Deploy Flask + Gunicorn + Nginx di vm-backend
-
-- name: Salin seluruh folder backend ke VM
-  ansible.builtin.copy:
-    src: "{{ project_dir }}/../backend/"
-    dest: "{{ project_dir }}/"
-    owner: vagrant
-    group: vagrant
-    mode: "0644"
-  remote_src: true
+# File project sudah tersedia di /vagrant (Vagrant synced folder)
 
 - name: Render file .env backend dari template
   ansible.builtin.template:
     src: env.j2
-    dest: "{{ project_dir }}/.env"
+    dest: "{{ project_dir_backend }}/.env"
     owner: vagrant
     group: vagrant
     mode: "0600"
@@ -22,7 +14,7 @@
 - name: Render konfigurasi Nginx dari template
   ansible.builtin.template:
     src: nginx.conf.j2
-    dest: "{{ project_dir }}/nginx/default.conf"
+    dest: "{{ project_dir_backend }}/nginx/default.conf"
     owner: vagrant
     group: vagrant
     mode: "0644"
@@ -31,7 +23,7 @@
   ansible.builtin.shell: |
     docker compose up -d --build
   args:
-    chdir: "{{ project_dir }}"
+    chdir: "{{ project_dir_backend }}"
   become: true
   become_user: vagrant
 
