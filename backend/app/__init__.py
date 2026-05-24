@@ -13,11 +13,10 @@ def create_app(config_class=Config):
 
     db.init_app(app)
     bcrypt.init_app(app)
-    # Hanya izinkan request dari domain frontend (vm-frontend / Sumopod)
-    # Ganti 'yourdomain.com' dengan domain aktual saat deploy
+    # Hanya izinkan request dari vm-frontend
+    # Untuk production, ganti dengan domain aktual: https://yourdomain.com
     CORS(app, origins=[
-        "https://yourdomain.com",
-        "https://www.yourdomain.com",
+        "http://192.168.1.12:3000",
     ])
 
     with app.app_context():
