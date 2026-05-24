@@ -82,6 +82,66 @@ Konfigurasi Docker untuk PostgreSQL di vm-database.
 
 ---
 
+## Deployment Lokal dengan Vagrant + Ansible (Testing 3-VM)
+
+> Cara tercepat untuk simulasi 3-VM di laptop tanpa setup manual.
+> Prasyarat: install [VirtualBox](https://www.virtualbox.org) dan [Vagrant](https://www.vagrantup.com).
+
+### Prasyarat
+```bash
+# Cek versi
+vagrant --version    # minimal 2.3.x
+vboxmanage --version # minimal 7.x
+```
+
+### Konfigurasi Sebelum Jalankan
+
+Edit satu file saja — `vagrant/ansible/vars.yml`:
+```yaml
+db_password: "isi_password_db_anda"
+flask_secret_key: "isi_secret_key_64_karakter"
+```
+
+### Jalankan
+
+```bash
+cd vagrant/
+
+# Nyalakan semua VM + provisioning otomatis (pertama kali ~10-15 menit)
+vagrant up
+
+# Cek status VM
+vagrant status
+
+# SSH ke VM tertentu
+vagrant ssh vm-database
+vagrant ssh vm-backend
+vagrant ssh vm-frontend
+
+# Matikan VM (data tersimpan)
+vagrant halt
+
+# Hapus semua VM
+vagrant destroy -f
+```
+
+### Akses Setelah `vagrant up` Selesai
+
+| Layanan | URL |
+|---|---|
+| Frontend | `http://192.168.56.12:3000` |
+| API Backend | `http://192.168.56.11/api/` |
+| Blacklist API | `http://192.168.56.11/api/blacklist/` |
+
+### Re-provision (jika ada perubahan kode)
+
+```bash
+vagrant provision              # provision ulang semua VM
+vagrant provision vm-backend   # provision ulang satu VM saja
+```
+
+---
+
 ## Deployment Production (3-VM Docker)
 
 > Dokumentasi lengkap arsitektur dan keputusan desain ada di [PRD.md](./PRD.md).

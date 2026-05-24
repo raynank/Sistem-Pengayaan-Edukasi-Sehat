@@ -1,7 +1,10 @@
-// Local: gunakan IP VM langsung
-// Production: ganti dengan https://api.yourdomain.com dan https://yourdomain.com
-const API_URL = "http://192.168.1.11/api/blacklist/";
-const REDIRECT_URL = "http://192.168.1.12:3000/hold-on";
+// ── Environment URLs ──────────────────────────────────────────
+// Vagrant (lokal):   192.168.56.11 / 192.168.56.12
+// Real VM (lokal):   192.168.1.11  / 192.168.1.12
+// Production:        https://api.yourdomain.com / https://yourdomain.com
+
+const API_URL      = "http://192.168.56.11/api/blacklist/";
+const REDIRECT_URL = "http://192.168.56.12:3000/hold-on";
 
 async function fetchAndSyncRules() {
   try {

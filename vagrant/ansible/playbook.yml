@@ -1,0 +1,109 @@
+---
+# Master Playbook — NoPMO Tracker 3-VM Deployment
+# Dijalankan otomatis oleh Vagrant saat: vagrant up / vagrant provision
+
+# ─────────────────────────────────────────────────────────────
+# Play 1: Semua VM — install Docker + setup dasar
+# ─────────────────────────────────────────────────────────────
+- name: Setup dasar semua VM
+  hosts: all
+  become: true
+  vars_files:
+    - vars.yml
+  roles:
+    - common
+
+# ─────────────────────────────────────────────────────────────
+# Play 2: vm-database — deploy PostgreSQL
+# ─────────────────────────────────────────────────────────────
+- name: Deploy database (PostgreSQL)
+  hosts: vm-database
+  become: true
+  vars_files:
+    - vars.yml
+  pre_tasks:
+    - name: Salin folder database dari host ke VM
+      ansible.builtin.copy:
+        src: /vagrant/database/
+        dest: "{{ project_dir }}/"
+        owner: vagrant
+        group: vagrant
+        mode: "0644"
+      remote_src: false
+  roles:
+    - database
+  post_tasks:
+    - name: Konfirmasi PostgreSQL berjalan
+      ansible.builtin.debug:
+        msg: "vm-database siap di {{ ip_database }}:{{ db_port }}"
+
+# ─────────────────────────────────────────────────────────────
+# Play 3: vm-backend — deploy Flask + Gunicorn + Nginx
+# Dijalankan SETELAH database siap
+# ─────────────────────────────────────────────────────────────
+- name: Deploy backend (Flask + Nginx)
+  hosts: vm-backend
+  become: true
+  vars_files:
+    - vars.yml
+  pre_tasks:
+    - name: Salin folder backend dari host ke VM
+      ansible.builtin.copy:
+        src: /vagrant/backend/
+        dest: "{{ project_dir }}/"
+        owner: vagrant
+        group: vagrant
+        mode: "0644"
+      remote_src: false
+  roles:
+    - backend
+  post_tasks:
+    - name: Konfirmasi backend berjalan
+      ansible.builtin.debug:
+        msg: "vm-backend API siap di http://{{ ip_backend }}/api/"
+
+# ─────────────────────────────────────────────────────────────
+# Play 4: vm-frontend — deploy Next.js
+# Dijalankan SETELAH backend siap
+# ─────────────────────────────────────────────────────────────
+- name: Deploy frontend (Next.js)
+  hosts: vm-frontend
+  become: true
+  vars_files:
+    - vars.yml
+  pre_tasks:
+    - name: Salin folder frontend dari host ke VM
+      ansible.builtin.copy:
+        src: /vagrant/frontend/
+        dest: "{{ project_dir }}/"
+        owner: vagrant
+        group: vagrant
+        mode: "0644"
+      remote_src: false
+  roles:
+    - frontend
+  post_tasks:
+    - name: Konfirmasi frontend berjalan
+      ansible.builtin.debug:
+        msg: "vm-frontend siap di http://{{ ip_frontend }}:{{ frontend_port }}"
+
+# ─────────────────────────────────────────────────────────────
+# Play 5: Summary — tampilkan semua URL akses
+# ─────────────────────────────────────────────────────────────
+- name: Deployment selesai — ringkasan akses
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - /vagrant/vagrant/ansible/vars.yml
+  tasks:
+    - name: Tampilkan URL akses aplikasi
+      ansible.builtin.debug:
+        msg:
+          - "============================================"
+          - "  NoPMO Tracker berhasil di-deploy!"
+          - "============================================"
+          - "  Frontend  : http://{{ ip_frontend }}:{{ frontend_port }}"
+          - "  Backend   : http://{{ ip_backend }}/api/"
+          - "  Blacklist : http://{{ ip_backend }}/api/blacklist/"
+          - "  Database  : {{ ip_database }}:{{ db_port }}"
+          - "============================================"
