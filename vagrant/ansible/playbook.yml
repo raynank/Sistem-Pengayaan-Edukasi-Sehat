@@ -1,6 +1,9 @@
 ---
 # Master Playbook — NoPMO Tracker 3-VM Deployment
 # Dijalankan otomatis oleh Vagrant saat: vagrant up / vagrant provision
+#
+# Catatan: Vagrant sudah mount seluruh project ke /vagrant di tiap VM
+# sehingga tidak perlu copy file — langsung pakai dari /vagrant/
 
 # ─────────────────────────────────────────────────────────────
 # Play 1: Semua VM — install Docker + setup dasar
@@ -21,15 +24,6 @@
   become: true
   vars_files:
     - vars.yml
-  pre_tasks:
-    - name: Salin folder database dari host ke VM
-      ansible.builtin.copy:
-        src: /vagrant/database/
-        dest: "{{ project_dir }}/"
-        owner: vagrant
-        group: vagrant
-        mode: "0644"
-      remote_src: false
   roles:
     - database
   post_tasks:
@@ -46,15 +40,6 @@
   become: true
   vars_files:
     - vars.yml
-  pre_tasks:
-    - name: Salin folder backend dari host ke VM
-      ansible.builtin.copy:
-        src: /vagrant/backend/
-        dest: "{{ project_dir }}/"
-        owner: vagrant
-        group: vagrant
-        mode: "0644"
-      remote_src: false
   roles:
     - backend
   post_tasks:
@@ -71,15 +56,6 @@
   become: true
   vars_files:
     - vars.yml
-  pre_tasks:
-    - name: Salin folder frontend dari host ke VM
-      ansible.builtin.copy:
-        src: /vagrant/frontend/
-        dest: "{{ project_dir }}/"
-        owner: vagrant
-        group: vagrant
-        mode: "0644"
-      remote_src: false
   roles:
     - frontend
   post_tasks:
@@ -94,7 +70,7 @@
   hosts: localhost
   gather_facts: false
   vars_files:
-    - /vagrant/vagrant/ansible/vars.yml
+    - vars.yml
   tasks:
     - name: Tampilkan URL akses aplikasi
       ansible.builtin.debug:
