@@ -12,7 +12,7 @@ COPY . .
 
 # Build Next.js dengan output standalone (image produksi lebih kecil)
 # NEXT_PUBLIC_API_URL harus diset saat build karena diekspor ke client-side bundle
-ARG NEXT_PUBLIC_API_URL=https://api.yourdomain.com/api
+ARG NEXT_PUBLIC_API_URL=http://192.168.1.11/api
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NODE_ENV=production
 
