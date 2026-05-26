@@ -61,11 +61,3 @@
     name: vagrant
     groups: docker
     append: true
-
-- name: Buat direktori project di VM
-  ansible.builtin.file:
-    path: "{{ project_dir }}"
-    state: directory
-    owner: vagrant
-    group: vagrant
-    mode: "0755"

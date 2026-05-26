@@ -4,9 +4,9 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        # URL backend (Nginx vm-backend)
+        # vm-be Tailscale IP: 100.116.57.50
         # Untuk production, ganti dengan: https://api.yourdomain.com/api
-        NEXT_PUBLIC_API_URL: http://192.168.1.11/api
+        NEXT_PUBLIC_API_URL: http://100.116.57.50/api
     container_name: nopmo_frontend
     restart: unless-stopped
     ports:
