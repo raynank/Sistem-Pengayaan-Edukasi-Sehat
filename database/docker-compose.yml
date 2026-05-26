@@ -5,9 +5,8 @@ services:
     restart: unless-stopped
     env_file: .env
     ports:
-      # Vagrant: bind ke IP private_network vm-database (192.168.56.10)
-      # Real VM: ganti ke 192.168.1.10:5432:5432
-      - "192.168.56.10:5432:5432"
+      # Bind ke IP vm-database (host-only), tidak expose ke publik
+      - "192.168.1.10:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
