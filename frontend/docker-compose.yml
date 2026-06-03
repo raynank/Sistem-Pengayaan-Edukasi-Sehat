@@ -4,12 +4,12 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        # vm-be Tailscale IP: 100.116.57.50
+        # VM-Backend IP: 192.168.56.11
         # Untuk production, ganti dengan: https://api.yourdomain.com/api
-        NEXT_PUBLIC_API_URL: http://100.116.57.50/api
-    container_name: nopmo_frontend
+        NEXT_PUBLIC_API_URL: http://192.168.56.11/api
+    container_name: internetsehat_frontend
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "80:80"
     environment:
       - NODE_ENV=production

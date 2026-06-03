@@ -1,0 +1,20 @@
+---
+# ══════════════════════════════════════════════════════════════════
+# Role: frontend — Setup dan jalankan Next.js di VM-Frontend
+# ══════════════════════════════════════════════════════════════════
+
+- name: Build and start Frontend container
+  shell: docker compose up -d --build
+  args:
+    chdir: /home/vagrant/app/frontend
+
+- name: Wait for Frontend container to be running
+  shell: docker ps --filter "name=internetsehat_frontend" --filter "status=running" -q
+  register: frontend_running
+  retries: 12
+  delay: 10
+  until: frontend_running.stdout != ""
+
+- name: Show Frontend status
+  debug:
+    msg: "Frontend running — Next.js on 192.168.56.12:80 — Open: http://192.168.56.12"

@@ -1,0 +1,33 @@
+---
+# ══════════════════════════════════════════════════════════════════
+# Role: db — Setup dan jalankan PostgreSQL di VM-Database
+# ══════════════════════════════════════════════════════════════════
+
+- name: Create .env file for PostgreSQL
+  copy:
+    dest: /home/vagrant/app/database/.env
+    content: |
+      # Kredensial PostgreSQL (development)
+      POSTGRES_USER=internetsehat_user
+      POSTGRES_PASSWORD=internetsehat_dev_password_2024
+      POSTGRES_DB=internetsehat_db
+    owner: vagrant
+    group: vagrant
+    mode: "0600"
+    force: no
+
+- name: Start PostgreSQL container with Docker Compose
+  shell: docker compose up -d
+  args:
+    chdir: /home/vagrant/app/database
+
+- name: Wait for PostgreSQL to be ready
+  shell: docker exec internetsehat_db pg_isready -U internetsehat_user -d internetsehat_db
+  register: pg_ready
+  retries: 12
+  delay: 5
+  until: pg_ready.rc == 0
+
+- name: Show PostgreSQL status
+  debug:
+    msg: "PostgreSQL is running on 192.168.56.10:5432"

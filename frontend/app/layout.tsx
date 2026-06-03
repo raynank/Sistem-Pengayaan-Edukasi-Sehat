@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "NoPMO Tracker",
-  description: "Track your progress and overcome PMO addiction.",
+  title: "Internet Sehat",
+  description: "Dashboard untuk melacak dan menghindari akses ke konten negatif.",
 };
 
 export default function RootLayout({

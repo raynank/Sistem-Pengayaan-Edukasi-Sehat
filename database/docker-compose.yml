@@ -1,12 +1,11 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: nopmo_db
+    container_name: internetsehat_db
     restart: unless-stopped
     env_file: .env
     ports:
-      # Bind ke IP Tailscale vm-db, tidak expose ke publik
-      - "100.111.166.88:5432:5432"
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:

@@ -1,62 +1,28 @@
-# Node / Frontend
+# Node.js
 node_modules/
-.next/
-out/
-build/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnp
-.pnp.js
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Python / Backend
-__pycache__/
-*.py[cod]
-*$py.class
-venv/
-env/
-.env
-instance/
-
-# Docker — environment files (semua .env di semua subdirektori)
-**/.env
-*.sqlite3
-*.db
-.pytest_cache/
-htmlcov/
-.coverage
-.tox/
-build/
-develop-eggs/
 dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+build/
+.next/
 
-# OS / System
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Environment Variables
+.env
+.env.*
+!.env.example
+!.env_example
+
+# Vagrant
+.vagrant/
+
+# OS & Logs
 .DS_Store
-Thumbs.db
-Desktop.ini
+*.log
 
-# IDEs / Editors
-.vscode/
-.idea/
-*.swp
-*.swo
-
-Product Requirements Document.docx
+# Custom
+plan/
+database/pgdata/

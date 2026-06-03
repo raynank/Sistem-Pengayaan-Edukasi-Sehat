@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "NoPMO Web Filter",
+  "name": "Internet Sehat Web Filter",
   "version": "1.0.0",
-  "description": "Block negative content and sync with NoPMO Tracker.",
+  "description": "Blokir konten negatif dan pantau progresmu.",
   "permissions": [
     "declarativeNetRequest",
     "declarativeNetRequestWithHostAccess",
@@ -16,6 +16,6 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "NoPMO Status"
+    "default_title": "Internet Sehat Status"
   }
 }

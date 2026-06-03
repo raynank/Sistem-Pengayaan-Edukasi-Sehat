@@ -60,7 +60,7 @@ export default function Dashboard() {
       <header className="w-full max-w-4xl flex justify-between items-center mb-16">
         <h1 className="text-2xl font-bold text-teal-800 flex items-center gap-2">
           <CheckCircle2 className="text-teal-500" />
-          NoPMO Tracker
+          Internet Sehat
         </h1>
         <button 
           onClick={handleLogout}
@@ -138,6 +138,43 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Footer / Navbar Bawah */}
+      <footer className="mt-auto py-8 w-full text-center">
+        <div className="inline-flex flex-col items-center justify-center p-5 rounded-2xl bg-white/60 backdrop-blur-md border border-teal-100 shadow-sm transition-all hover:shadow-md hover:bg-white/80">
+          <p className="text-sm font-medium text-slate-500 flex items-center gap-1.5">
+            Dibuat dengan <span className="text-red-500 animate-pulse">♥</span> oleh kelompok kami
+          </p>
+          <div className="flex gap-3 mt-3 text-teal-800 font-semibold">
+            <a 
+              href="https://instagram.com/raynan.k" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="bg-teal-50 border border-teal-100 px-4 py-1.5 rounded-full shadow-sm text-sm hover:bg-teal-100 transition-colors cursor-pointer"
+            >
+              Raynan
+            </a>
+            
+            <a 
+              href="https://www.instagram.com/ukasyhhh_/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="bg-teal-50 border border-teal-100 px-4 py-1.5 rounded-full shadow-sm text-sm hover:bg-teal-100 transition-colors cursor-pointer"
+            >
+              Ukasyah
+            </a>
+            
+            <a 
+              href="https://www.instagram.com/rafzyaff/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="bg-teal-50 border border-teal-100 px-4 py-1.5 rounded-full shadow-sm text-sm hover:bg-teal-100 transition-colors cursor-pointer"
+            >
+              Rafa Zia
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

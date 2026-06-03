@@ -1,0 +1,17 @@
+---
+# ══════════════════════════════════════════════════════════════════
+# playbook.yml — Internet Sehat Provisioning Playbook
+# ══════════════════════════════════════════════════════════════════
+# Playbook utama. Dipanggil oleh Vagrant ansible_local provisioner.
+# Variable 'role' ditentukan oleh Vagrantfile extra_vars.
+# ══════════════════════════════════════════════════════════════════
+
+- name: Provision Internet Sehat VM
+  hosts: all
+  become: true
+
+  roles:
+    - docker
+    - { role: db,       when: role == "db" }
+    - { role: backend,  when: role == "backend" }
+    - { role: frontend, when: role == "frontend" }

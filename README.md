@@ -1,247 +1,161 @@
-# NoPMO Tracker
+# Sistem Pengayaan Edukasi Sehat — Internet Sehat
 
-NoPMO Tracker adalah aplikasi komprehensif yang dirancang untuk membantu pengguna melacak kemajuan mereka dalam menghindari konten negatif, dengan dilengkapi ekstensi peramban (browser extension) untuk memblokir situs-situs yang tidak diinginkan secara otomatis.
+**Internet Sehat** adalah sebuah aplikasi web dan ekstensi peramban (browser) yang dirancang untuk membantu pengguna mengontrol kebiasaan berselancar di internet, menghindari konten negatif (seperti judi online atau situs terlarang lainnya), serta membangun kebiasaan positif melalui sistem pelacakan pencapaian beruntun (*streak tracking*). 
 
-Proyek ini terdiri dari tiga komponen utama:
-1. **Backend** (Python/Flask + Gunicorn)
-2. **Frontend** (Next.js/React)
-3. **Extension** (Chrome Extension)
+Secara infrastruktur, sistem ini dijalankan secara terisolasi menggunakan **tiga Virtual Machine (VM)** Ubuntu Server yang di-provisioning secara otomatis melalui **Vagrant** dan dikonfigurasi dengan **Ansible**. Masing-masing VM memiliki tanggung jawab khusus: Database, Backend, dan Frontend.
 
----
+## Bagan Alur Kerja Aplikasi
 
-## Arsitektur Production (3-VM + Docker)
-
-```
-[ Internet / Browser Extension ]
-          │
-          ▼
-[ vm-frontend ]  ──── HTTPS ────▶  [ vm-backend ]  ──── TCP:5432 ────▶  [ vm-database ]
-  Sumopod (Public IP)               192.168.1.11                          192.168.1.10
-  Next.js : port 3000               Nginx : port 80/443                   PostgreSQL : 5432
-  Domain dikonfigurasi user         └── Flask+Gunicorn : port 5000 (internal)
-```
-
-| VM | IP | Peran |
-|---|---|---|
-| `vm-database` | `192.168.1.10` | PostgreSQL 16 |
-| `vm-backend` | `192.168.1.11` | Flask + Gunicorn + Nginx (reverse proxy) |
-| `vm-frontend` | Public IP (Sumopod) | Next.js |
+1. **Sinkronisasi Data (Backend & Database):** Backend (Flask) mengambil daftar domain terlarang dari sumber terpercaya (dataset *Trust Positif*) dan menyimpannya secara terpusat di Database (PostgreSQL).
+2. **Pemantauan Akses (Chrome Extension):** Ekstensi Chrome yang terpasang di peramban pengguna akan memantau URL yang diakses. Ekstensi ini secara rutin mengambil daftar domain terlarang (*blacklist*) terbaru dari Backend via API.
+3. **Intervensi (Pemblokiran & Pengalihan):** Jika pengguna secara sengaja atau tidak sengaja mencoba mengakses situs yang masuk dalam *blacklist*, Ekstensi Chrome akan seketika memblokir akses tersebut dan mengalihkan pengguna ke halaman utama aplikasi (**Frontend**).
+4. **Edukasi dan Gamifikasi (Frontend):** Pada halaman Frontend (Next.js), pengguna diberikan pesan peringatan dan edukasi. Halaman ini juga berfungsi sebagai dasbor interaktif tempat pengguna melacak kemajuan *streak* (hari beruntun tanpa membuka situs negatif) untuk menjaga motivasi.
 
 ---
 
-## Struktur Direktori & Dokumentasi File
+## 1. Arsitektur Infrastruktur
 
-### 1. Backend (`/backend`)
-Backend dibangun menggunakan framework Flask untuk menyediakan RESTful API.
-- `requirements.txt` : Daftar dependensi Python yang dibutuhkan (Flask, SQLAlchemy, PyJWT, dll).
-- `run.py` : Titik masuk (entry point) utama untuk menjalankan server Flask.
-- `init_db.py` : Skrip untuk menginisialisasi database PostgreSQL (membuat tabel dan seed data awal).
-- `Dockerfile` : Build image Flask + Gunicorn untuk production Docker.
-- `docker-compose.yml` : Orkestrasi container Flask dan Nginx di vm-backend.
-- `.env.example` : Template environment variables (salin ke `.env` saat deploy).
-- `nginx/default.conf` : Konfigurasi Nginx sebagai reverse proxy + HTTPS (Let's Encrypt).
+Project menggunakan tiga VM terpisah yang dikelola oleh Vagrant.
 
-#### `app/` (Modul Utama Aplikasi)
-- `__init__.py` : Menginisialisasi aplikasi Flask, konfigurasi ekstensi (Bcrypt, SQLAlchemy, CORS), dan mendaftarkan blueprint untuk routing.
-- `config.py` : Berisi class konfigurasi untuk aplikasi Flask (membaca `DATABASE_URL` dan `SECRET_KEY` dari environment).
-- `models.py` : Definisi skema database menggunakan SQLAlchemy (model `User`, `RelapseLog`, `BlacklistDomain`).
-
-#### `app/routes/` (Endpoint API)
-- `auth.py` : Endpoint `/api/auth/register` dan `/api/auth/login`, menghasilkan JWT token.
-- `tracker.py` : Endpoint `/api/tracker/status` dan `/api/tracker/relapse` untuk manajemen streak.
-- `blacklist.py` : Endpoint `/api/blacklist/` untuk menyuplai daftar domain ke ekstensi browser.
-
-### 2. Frontend (`/frontend`)
-Frontend dibangun dengan framework Next.js untuk menyajikan antarmuka pengguna (UI) yang interaktif.
-- `package.json` : Mengelola dependensi npm (Next.js, React, TailwindCSS, Axios, js-cookie).
-- `next.config.js` : Konfigurasi Next.js dengan `output: 'standalone'` untuk Docker.
-- `Dockerfile` : Multi-stage build Next.js untuk production Docker.
-- `docker-compose.yml` : Orkestrasi container frontend di vm-frontend.
-- `.env.example` : Template environment variables frontend.
-- `tailwind.config.ts` & `postcss.config.mjs` : Konfigurasi styling Tailwind CSS.
-
-#### `app/` (Halaman & Routing Next.js)
-- `globals.css` : File CSS utama untuk mendefinisikan gaya global aplikasi.
-- `layout.tsx` : Layout pembungkus utama (root layout).
-- `page.tsx` : Halaman utama (Dashboard) — menampilkan progress tracker dan tombol reset.
-- `login/` & `register/` : Halaman autentikasi pengguna.
-- `hold-on/` : Halaman peringatan intervensi (redirect target dari ekstensi).
-
-#### `utils/`
-- `api.ts` : Instance axios yang membaca `NEXT_PUBLIC_API_URL` dari environment untuk komunikasi ke backend.
-
-### 3. Extension (`/extension`)
-Ekstensi browser (Manifest V3) yang memblokir konten negatif berdasarkan blacklist dari backend API.
-- `manifest.json` : Konfigurasi ekstensi Chrome (permissions, background worker).
-- `background.js` : Service worker yang mengambil blacklist dari API, menerapkan aturan `declarativeNetRequest`, dan mengarahkan akses ke halaman `/hold-on`.
-
-### 4. Database (`/database`)
-Konfigurasi Docker untuk PostgreSQL di vm-database.
-- `docker-compose.yml` : Menjalankan container PostgreSQL 16.
-- `.env.example` : Template kredensial database.
+| VM | Hostname | IP | Service Utama | Port |
+|---|---|---:|---|---:|
+| Database | `cc-db` | `192.168.56.10` | PostgreSQL via Docker | `5432` |
+| Backend | `cc-be` | `192.168.56.11` | Flask, Gunicorn, dan Nginx via Docker Compose | `80` |
+| Frontend | `cc-fe` | `192.168.56.12` | Next.js via Docker | `80` |
 
 ---
 
-## Deployment Lokal dengan Vagrant + Ansible (Testing 3-VM)
+## 2. Persiapan Environment
 
-> Cara tercepat untuk simulasi 3-VM di laptop tanpa setup manual.
-> Prasyarat: install [VirtualBox](https://www.virtualbox.org) dan [Vagrant](https://www.vagrantup.com).
+Pastikan software berikut sudah terinstall di komputer host (Windows):
+1. **Oracle VirtualBox** (https://www.virtualbox.org/wiki/Downloads)
+2. **Vagrant** (https://www.vagrantup.com/downloads)
 
-### Prasyarat
-```bash
-# Cek versi
-vagrant --version    # minimal 2.3.x
-vboxmanage --version # minimal 7.x
+Setelah install, verifikasi di PowerShell:
+```powershell
+vagrant --version
 ```
 
-### Konfigurasi Sebelum Jalankan
+### Konfigurasi File Environment (`.env`)
 
-Edit satu file saja — `vagrant/ansible/vars.yml`:
-```yaml
-db_password: "isi_password_db_anda"
-flask_secret_key: "isi_secret_key_64_karakter"
-```
+Sebelum menjalankan aplikasi, Anda wajib membuat file `.env` di folder `database/` dan `backend/` dengan menyalin template contoh yang telah disediakan:
 
-### Jalankan
+1. **Database `.env`**:
+   * Salin file [database/.env_example](file:///c:/Users/raiha/Raynan/Kuliah/Semester%204/CC/tubes2/database/.env_example) menjadi `.env` di folder yang sama.
+   * Command (PowerShell/Bash):
+     ```bash
+     cp database/.env_example database/.env
+     ```
+2. **Backend `.env`**:
+   * Salin file [backend/.env_example](file:///c:/Users/raiha/Raynan/Kuliah/Semester%204/CC/tubes2/backend/.env_example) menjadi `.env` di folder yang sama.
+   * Command (PowerShell/Bash):
+     ```bash
+     cp backend/.env_example backend/.env
+     ```
 
-```bash
-cd vagrant/
+---
 
-# Nyalakan semua VM + provisioning otomatis (pertama kali ~10-15 menit)
+## 3. Menjalankan Aplikasi dengan Vagrant
+
+Buka PowerShell di folder root project, lalu jalankan:
+
+```powershell
 vagrant up
-
-# Cek status VM
-vagrant status
-
-# SSH ke VM tertentu
-vagrant ssh vm-database
-vagrant ssh vm-backend
-vagrant ssh vm-frontend
-
-# Matikan VM (data tersimpan)
-vagrant halt
-
-# Hapus semua VM
-vagrant destroy -f
 ```
 
-### Akses Setelah `vagrant up` Selesai
+Perintah ini akan secara otomatis:
+1. Mendownload base image Ubuntu 22.04.
+2. Membuat 3 VM di VirtualBox dan mengonfigurasi IP address.
+3. Menjalankan Ansible (di dalam VM) untuk menginstal Docker, menjalankan PostgreSQL, melakukan build Nginx+Flask, dan menjalankan frontend Next.js.
 
-| Layanan | URL |
+> **Catatan:** Proses pertama kali membutuhkan waktu beberapa menit karena sistem akan mengunduh dependencies dan build Docker images.
+
+---
+
+## 4. Verifikasi Aplikasi
+
+Setelah perintah `vagrant up` selesai, aplikasi langsung dapat diakses!
+
+### A. Tes Frontend dari Browser
+Buka browser dan akses:
+👉 **http://192.168.56.12**
+
+### B. Tes Backend Health Check
+Buka browser dan akses:
+👉 **http://192.168.56.11/health**
+
+*(Akan menampilkan respons JSON `{"status": "ok"}`)*
+
+### C. Tes Backend Blacklist API
+Buka browser dan akses:
+👉 **http://192.168.56.11/api/blacklist/**
+
+---
+
+## 5. Memasang Chrome Extension
+
+1. Buka browser Chrome dan akses halaman: `chrome://extensions`
+2. Aktifkan **Developer mode** (pojok kanan atas).
+3. Klik **Load unpacked**.
+4. Pilih folder `extension` yang ada di dalam repository proyek ini.
+5. Selesai! Chrome extension sudah terpasang dan akan secara otomatis menggunakan API backend (http://192.168.56.11).
+
+> [!WARNING]
+> **Keterbatasan Ekstensi Chrome:** Karena ekstensi ini masih dalam tahap pengembangan dan harus dipasang menggunakan **Developer Mode** (belum dipublikasikan secara resmi di Chrome Web Store), terdapat beberapa keterbatasan. Mekanisme pemblokiran dan pengalihan halaman mungkin tidak selalu bekerja 100% konsisten atau sempurna di semua kondisi dikarenakan restriksi keamanan bawaan Chrome terhadap ekstensi berstatus *unpacked*.
+
+---
+
+## 6. Perintah Vagrant yang Sering Digunakan
+
+Buka terminal di root project untuk menjalankan perintah berikut:
+
+| Perintah | Fungsi |
 |---|---|
-| Frontend | `http://192.168.56.12:3000` |
-| API Backend | `http://192.168.56.11/api/` |
-| Blacklist API | `http://192.168.56.11/api/blacklist/` |
+| `vagrant up` | Buat dan jalankan semua VM |
+| `vagrant halt` | Matikan (shutdown) semua VM |
+| `vagrant destroy -f` | Hapus semua VM (menghapus data) |
+| `vagrant status` | Cek status nyala/mati VM |
+| `vagrant ssh db` | Masuk ke terminal VM Database |
+| `vagrant ssh backend` | Masuk ke terminal VM Backend |
+| `vagrant ssh frontend` | Masuk ke terminal VM Frontend |
 
-### Re-provision (jika ada perubahan kode)
+---
+
+## 7. Troubleshooting (Akses Manual VM)
+
+Jika ingin masuk ke VM atau memeriksa log Docker secara manual:
 
 ```bash
-vagrant provision              # provision ulang semua VM
-vagrant provision vm-backend   # provision ulang satu VM saja
+# Masuk ke VM Backend
+vagrant ssh backend
+
+# Melihat log aplikasi backend
+docker logs internetsehat_flask
+
+# Masuk ke VM Database
+vagrant ssh db
+
+# Masuk ke postgresql CLI
+docker exec -it internetsehat_db psql -U internetsehat_user -d internetsehat_db
 ```
 
 ---
 
-## Deployment Production (3-VM Docker)
+## 8. Sinkronisasi Dataset Blacklist (Manual)
 
-> Dokumentasi lengkap arsitektur dan keputusan desain ada di [PRD.md](./PRD.md).
+Secara default, database PostgreSQL hanya diisi dengan beberapa domain uji coba saat inisialisasi pertama kali. Untuk menyinkronkan daftar domain terlarang yang lengkap (misalnya daftar domain judi online dari *Trust Positif*), Anda perlu menjalankan skrip sinkronisasi secara manual.
 
-### Prasyarat
-- Docker 24.x+ dan Docker Compose v2 di semua VM
-- Domain aktif dengan DNS A record ke IP Sumopod (vm-frontend)
-- Subdomain `api.yourdomain.com` diarahkan ke IP vm-backend
+Jalankan perintah berikut di PowerShell dari folder root project (host):
 
-### Langkah 1 — Deploy `vm-database` (192.168.1.10)
-
-```bash
-# Di vm-database
-cd database/
-cp .env.example .env
-# Edit .env — isi POSTGRES_PASSWORD dengan password kuat
-nano .env
-
-docker compose up -d
-
-# Verifikasi database berjalan
-docker exec -it nopmo_db psql -U nopmo_user -d nopmo_db -c "\dt"
+```powershell
+vagrant ssh backend -c "cd /home/vagrant/app/backend && docker exec internetsehat_flask python sync_blacklist.py"
 ```
 
-### Langkah 2 — Deploy `vm-backend` (192.168.1.11)
+Skrip ini akan mengunduh dataset secara live, memprosesnya dalam batch, dan menyimpannya ke dalam database. Jika database sudah terisi, skrip akan secara otomatis melewati domain yang sudah ada (*ON CONFLICT DO NOTHING*) untuk menghemat waktu dan resource.
 
-```bash
-# Di vm-backend
-cd backend/
-cp .env.example .env
-# Edit .env — isi SECRET_KEY dan DATABASE_URL dengan kredensial aktual
-nano .env
 
-# Dapatkan SSL certificate dari Let's Encrypt (sebelum jalankan docker compose)
-apt install certbot -y
-certbot certonly --standalone -d api.yourdomain.com
-# Ganti 'yourdomain.com' di nginx/default.conf dengan domain aktual
-nano nginx/default.conf
 
-docker compose up -d
 
-# Inisialisasi database (buat tabel + seed blacklist)
-docker exec nopmo_flask python init_db.py
 
-# Verifikasi API berjalan
-curl https://api.yourdomain.com/api/blacklist/
-```
 
-### Langkah 3 — Deploy `vm-frontend` (Sumopod)
 
-```bash
-# Di vm-frontend / Sumopod
-cd frontend/
-# Ganti 'yourdomain.com' di docker-compose.yml dengan domain aktual
-nano docker-compose.yml
-
-docker compose up -d
-
-# Verifikasi frontend berjalan
-curl http://localhost:3000
-```
-
-### Langkah 4 — Update Extension
-
-Edit `extension/background.js` — ganti `yourdomain.com` dengan domain aktual:
-
-```js
-const API_URL = "https://api.yourdomain.com/api/blacklist/";
-const REDIRECT_URL = "https://yourdomain.com/hold-on";
-```
-
-Kemudian reload extension di browser (`chrome://extensions/` → klik ikon refresh).
-
----
-
-## Cara Menjalankan Proyek (Local Development)
-
-### Backend
-1. Masuk ke direktori `backend` (`cd backend`)
-2. Buat virtual environment: `python -m venv venv`
-3. Aktifkan virtual environment:
-   - Windows: `venv\Scripts\activate`
-   - Mac/Linux: `source venv/bin/activate`
-4. Install dependensi: `pip install -r requirements.txt`
-5. Buat file `.env` dengan `SECRET_KEY` dan `DATABASE_URL` (bisa SQLite: `sqlite:///nopmo.db`)
-6. Inisialisasi Database: `python init_db.py`
-7. Jalankan Server: `python run.py`
-
-### Frontend
-1. Masuk ke direktori `frontend` (`cd frontend`)
-2. Buat file `.env.local` dengan `NEXT_PUBLIC_API_URL=http://localhost:5000/api`
-3. Install dependensi NPM: `npm install`
-4. Jalankan development server: `npm run dev`
-5. Akses melalui `http://localhost:3000`
-
-### Ekstensi Browser
-1. Buka browser berbasis Chromium (Google Chrome, Microsoft Edge, Brave, dll).
-2. Pergi ke halaman ekstensi (`chrome://extensions/`).
-3. Aktifkan **Developer mode** di pojok kanan atas.
-4. Klik **Load unpacked** dan pilih folder `extension/` dari proyek ini.
-5. Ekstensi siap bekerja di latar belakang.
-
-> **Catatan Development:** Untuk development lokal, kembalikan URL di `extension/background.js` ke `http://localhost:5000` dan `http://localhost:3000`.
