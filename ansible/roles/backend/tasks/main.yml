@@ -16,11 +16,11 @@
       SECRET_KEY={{ flask_secret.stdout }}
 
       # URL koneksi PostgreSQL di VM-Database (cc-db)
-      DATABASE_URL=postgresql://internetsehat_user:internetsehat_dev_password_2024@192.168.56.10:5432/internetsehat_db
+      DATABASE_URL=postgresql://internetsehat_user:internetsehat_dev_password_2026@192.168.56.10:5432/internetsehat_db
     owner: vagrant
     group: vagrant
     mode: "0600"
-    force: no
+    force: yes
 
 - name: Build and start Backend containers
   shell: docker compose up -d --build
@@ -37,7 +37,7 @@
 - name: Wait for Database to be reachable from backend
   shell: >
     docker exec internetsehat_flask python -c
-    "import psycopg2; psycopg2.connect('postgresql://internetsehat_user:internetsehat_dev_password_2024@192.168.56.10:5432/internetsehat_db')"
+    "import psycopg2; psycopg2.connect('postgresql://internetsehat_user:internetsehat_dev_password_2026@192.168.56.10:5432/internetsehat_db')"
   register: db_check
   retries: 30
   delay: 5
