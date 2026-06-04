@@ -1,4 +1,4 @@
-# Sistem Pengayaan Edukasi Sehat — Internet Sehat
+# Sistem Pengayaan Edukasi Internet Sehat
 
 **Internet Sehat** adalah sebuah aplikasi web dan ekstensi peramban (browser) yang dirancang untuk membantu pengguna mengontrol kebiasaan berselancar di internet, menghindari konten negatif (seperti judi online atau situs terlarang lainnya), serta membangun kebiasaan positif melalui sistem pelacakan pencapaian beruntun (*streak tracking*). 
 
